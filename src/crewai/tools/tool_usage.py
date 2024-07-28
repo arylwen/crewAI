@@ -239,9 +239,15 @@ class ToolUsage:
     ) -> None:
         if not self.tools_handler:
             return False  # type: ignore # No return value expected
+        print(f"\nLast used tool: {self.tools_handler.last_used_tool}") #GC
         if last_tool_usage := self.tools_handler.last_used_tool:
-            return (calling.tool_name == last_tool_usage.tool_name) and (  # type: ignore # No return value expected
-                calling.arguments == last_tool_usage.arguments
+            print(f"Calling: -{calling.tool_name}-. Last: -{last_tool_usage.tool_name}-") #GC
+            print(f"Calling: -{calling.arguments}-. Last: -{last_tool_usage.arguments}-") #GC
+            same = (calling.tool_name.casefold() == last_tool_usage.tool_name.casefold()) and (  
+                str(calling.arguments).casefold() == str(last_tool_usage.arguments).casefold())
+            print(f"Same as last: {same}") 
+            return (calling.tool_name.casefold() == last_tool_usage.tool_name.casefold()) and (  # type: ignore # No return value expected
+                str(calling.arguments).casefold() == str(last_tool_usage.arguments).casefold()
             )
 
     def _select_tool(self, tool_name: str) -> BaseTool:

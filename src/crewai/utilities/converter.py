@@ -75,6 +75,7 @@ class Converter(OutputConverter):
 
     @property
     def is_gpt(self) -> bool:
+        print(f'llm: {self.llm} {isinstance(self.llm, ChatOpenAI)}')
         """Return if llm provided is of gpt from openai."""
         return isinstance(self.llm, ChatOpenAI) and self.llm.openai_api_base is None
 
@@ -91,7 +92,9 @@ def convert_to_model(
         return result
 
     try:
+        print(f"converter: result: {result} model: {model}")
         escaped_result = json.dumps(json.loads(result, strict=False))
+        print(f"converter: escaped_result: {escaped_result}")
         return validate_model(escaped_result, model, bool(output_json))
     except json.JSONDecodeError as e:
         Printer().print(
