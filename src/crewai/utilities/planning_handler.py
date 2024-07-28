@@ -69,8 +69,8 @@ class CrewPlanner:
                 "task_expected_output": {task.expected_output}
                 "agent": {task.agent.role if task.agent else "None"}
                 "agent_goal": {task.agent.goal if task.agent else "None"}
-                "task_tools": {task.tools}
-                "agent_tools": {task.agent.tools if task.agent else "None"}
+                "task_tools": {[tool.name +" "+tool.description for tool in task.tools]}
+                "agent_tools": {[tool.name +" "+tool.description for tool in task.agent.tools] if task.agent else "None"}
                 """
             )
         return " ".join(tasks_summary)
