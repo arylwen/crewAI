@@ -1,5 +1,6 @@
 import ast
 from difflib import SequenceMatcher
+import os
 from textwrap import dedent
 from typing import Any, List, Union
 
@@ -11,12 +12,14 @@ from crewai.telemetry import Telemetry
 from crewai.tools.tool_calling import InstructorToolCalling, ToolCalling
 from crewai.utilities import I18N, Converter, ConverterError, Printer
 
-try:
-    import agentops
-except ImportError:
-    agentops = None
+agentops = None
+if os.environ.get("AGENTOPS_API_KEY"):
+    try:
+        import agentops
+    except ImportError:
+        pass
 
-OPENAI_BIGGER_MODELS = ["gpt-4"]
+OPENAI_BIGGER_MODELS = ["gpt-4o"]
 
 
 class ToolUsageErrorException(Exception):
@@ -68,7 +71,14 @@ class ToolUsage:
         self.task = task
         self.action = action
         self.function_calling_llm = function_calling_llm
-
+      
+        # Handling bug (see https://github.com/langchain-ai/langchain/pull/16395): raise an error if tools_names have space for ChatOpenAI
+        if isinstance(self.function_calling_llm, ChatOpenAI):
+            if " " in self.tools_names:
+                raise Exception(
+                    "Tools names should not have spaces for ChatOpenAI models."
+                )
+              
         # Set the maximum parsing attempts for bigger models
         if (isinstance(self.function_calling_llm, ChatOpenAI)) and (
             self.function_calling_llm.openai_api_base is None

@@ -8,6 +8,7 @@ from rich.table import Table
 from crewai.agent import Agent
 from crewai.task import Task
 from crewai.tasks.task_output import TaskOutput
+from crewai.telemetry import Telemetry
 
 
 class TaskEvaluationPydanticOutput(BaseModel):
@@ -28,20 +29,19 @@ class CrewEvaluator:
     """
 
     tasks_scores: defaultdict = defaultdict(list)
+    run_execution_times: defaultdict = defaultdict(list)
     iteration: int = 0
 
     def __init__(self, crew, openai_model_name: str):
         self.crew = crew
         self.openai_model_name = openai_model_name
+        self._telemetry = Telemetry()
         self._setup_for_evaluating()
 
     def _setup_for_evaluating(self) -> None:
         """Sets up the crew for evaluating."""
         for task in self.crew.tasks:
             task.callback = self.evaluate
-
-    def set_iteration(self, iteration: int) -> None:
-        self.iteration = iteration
 
     def _evaluator_agent(self):
         return Agent(
@@ -70,6 +70,9 @@ class CrewEvaluator:
             agent=evaluator_agent,
             output_pydantic=TaskEvaluationPydanticOutput,
         )
+
+    def set_iteration(self, iteration: int) -> None:
+        self.iteration = iteration
 
     def print_crew_evaluation_result(self) -> None:
         """
@@ -119,6 +122,16 @@ class CrewEvaluator:
         ]
         table.add_row("Crew", *map(str, crew_scores), f"{crew_average:.1f}")
 
+        run_exec_times = [
+            int(sum(tasks_exec_times))
+            for _, tasks_exec_times in self.run_execution_times.items()
+        ]
+        execution_time_avg = int(sum(run_exec_times) / len(run_exec_times))
+        table.add_row(
+            "Execution Time (s)",
+            *map(str, run_exec_times),
+            f"{execution_time_avg}",
+        )
         # Display the table in the terminal
         console = Console()
         console.print(table)
@@ -144,6 +157,15 @@ class CrewEvaluator:
         evaluation_result = evaluation_task.execute_sync()
 
         if isinstance(evaluation_result.pydantic, TaskEvaluationPydanticOutput):
+            self._test_result_span = self._telemetry.individual_test_result_span(
+                self.crew,
+                evaluation_result.pydantic.quality,
+                current_task._execution_time,
+                self.openai_model_name,
+            )
             self.tasks_scores[self.iteration].append(evaluation_result.pydantic.quality)
+            self.run_execution_times[self.iteration].append(
+                current_task._execution_time
+            )
         else:
             raise ValueError("Evaluation result is not in the expected format")

@@ -47,6 +47,11 @@ Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By 
                 </a>
             </li>
             <li>
+                <a href="./core-concepts/Pipeline">
+                    Pipeline
+                </a>
+            </li>
+            <li>
                 <a href="./core-concepts/Training-Crew">
                     Training
                 </a>
@@ -61,26 +66,16 @@ Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By 
                     Planning
                 </a>
             </li>
+            <li>
+                <a href="./core-concepts/Testing">
+                    Testing
+                </a>
+            </li>
         </ul>
     </div>
     <div style="width:30%">
         <h2>How-To Guides</h2>
         <ul>
-            <li>
-                <a href="./how-to/Start-a-New-CrewAI-Project">
-                    Starting Your crewAI Project
-                </a>
-            </li>
-            <li>
-                <a href="./how-to/Installing-CrewAI">
-                    Installing crewAI
-                </a>
-            </li>
-            <li>
-                <a href="./how-to/Creating-a-Crew-and-kick-it-off">
-                    Getting Started
-                </a>
-            </li>
             <li>
                 <a href="./how-to/Create-Custom-Tools">
                     Create Custom Tools

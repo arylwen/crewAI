@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import threading
@@ -46,6 +47,7 @@ class Task(BaseModel):
     tools_errors: int = 0
     delegations: int = 0
     i18n: I18N = I18N()
+    name: Optional[str] = Field(default=None)
     prompt_context: Optional[str] = None
     description: str = Field(description="Description of the actual task.")
     expected_output: str = Field(
@@ -107,6 +109,7 @@ class Task(BaseModel):
     _original_description: str | None = None
     _original_expected_output: str | None = None
     _thread: threading.Thread | None = None
+    _execution_time: float | None = None
 
     def __init__(__pydantic_self__, **data):
         config = data.pop("config", {})
@@ -119,6 +122,12 @@ class Task(BaseModel):
             raise PydanticCustomError(
                 "may_not_set_field", "This field is not to be set by the user.", {}
             )
+
+    def _set_start_execution_time(self) -> float:
+        return datetime.datetime.now().timestamp()
+
+    def _set_end_execution_time(self, start_time: float) -> None:
+        self._execution_time = datetime.datetime.now().timestamp() - start_time
 
     @field_validator("output_file")
     @classmethod
@@ -216,6 +225,7 @@ class Task(BaseModel):
                 f"The task '{self.description}' has no agent assigned, therefore it can't be executed directly and should be executed in a Crew using a specific process that support that, like hierarchical."
             )
 
+        start_time = self._set_start_execution_time()
         self._execution_span = self._telemetry.task_started(crew=agent.crew, task=self)
 
         self.prompt_context = context
@@ -239,6 +249,7 @@ class Task(BaseModel):
         )
         self.output = task_output
 
+        self._set_end_execution_time(start_time)
         if self.callback:
             self.callback(self.output)
 
@@ -250,7 +261,9 @@ class Task(BaseModel):
             content = (
                 json_output
                 if json_output
-                else pydantic_output.model_dump_json() if pydantic_output else result
+                else pydantic_output.model_dump_json()
+                if pydantic_output
+                else result
             )
             self._save_file(content)
 
@@ -355,6 +368,9 @@ class Task(BaseModel):
         return OutputFormat.RAW
 
     def _save_file(self, result: Any) -> None:
+        if self.output_file is None:
+            raise ValueError("output_file is not set.")
+
         directory = os.path.dirname(self.output_file)  # type: ignore # Value of type variable "AnyOrLiteralStr" of "dirname" cannot be "str | None"
 
         if directory and not os.path.exists(directory):
@@ -363,6 +379,7 @@ class Task(BaseModel):
         with open(self.output_file, "w", encoding="utf-8") as file:
             if isinstance(result, dict):
                 import json
+
                 json.dump(result, file, ensure_ascii=False, indent=2)
             else:
                 file.write(str(result))

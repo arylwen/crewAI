@@ -40,7 +40,7 @@ class Telemetry:
     - Roles of agents in a crew
     - Tools names available
 
-    Users can opt-in to sharing more complete data suing the `share_crew`
+    Users can opt-in to sharing more complete data using the `share_crew`
     attribute in the Crew class.
     """
 
@@ -284,6 +284,61 @@ class Telemetry:
                     self._add_attribute(
                         span, "llm", json.dumps(self._safe_llm_attributes(llm))
                     )
+                span.set_status(Status(StatusCode.OK))
+                span.end()
+            except Exception:
+                pass
+
+    def individual_test_result_span(
+        self, crew: Crew, quality: int, exec_time: int, model_name: str
+    ):
+        if self.ready:
+            try:
+                tracer = trace.get_tracer("crewai.telemetry")
+                span = tracer.start_span("Crew Individual Test Result")
+
+                self._add_attribute(
+                    span,
+                    "crewai_version",
+                    pkg_resources.get_distribution("crewai").version,
+                )
+                self._add_attribute(span, "crew_key", crew.key)
+                self._add_attribute(span, "crew_id", str(crew.id))
+                self._add_attribute(span, "quality", str(quality))
+                self._add_attribute(span, "exec_time", str(exec_time))
+                self._add_attribute(span, "model_name", model_name)
+                span.set_status(Status(StatusCode.OK))
+                span.end()
+            except Exception:
+                pass
+
+    def test_execution_span(
+        self,
+        crew: Crew,
+        iterations: int,
+        inputs: dict[str, Any] | None,
+        model_name: str,
+    ):
+        if self.ready:
+            try:
+                tracer = trace.get_tracer("crewai.telemetry")
+                span = tracer.start_span("Crew Test Execution")
+
+                self._add_attribute(
+                    span,
+                    "crewai_version",
+                    pkg_resources.get_distribution("crewai").version,
+                )
+                self._add_attribute(span, "crew_key", crew.key)
+                self._add_attribute(span, "crew_id", str(crew.id))
+                self._add_attribute(span, "iterations", str(iterations))
+                self._add_attribute(span, "model_name", model_name)
+
+                if crew.share_crew:
+                    self._add_attribute(
+                        span, "inputs", json.dumps(inputs) if inputs else None
+                    )
+
                 span.set_status(Status(StatusCode.OK))
                 span.end()
             except Exception:

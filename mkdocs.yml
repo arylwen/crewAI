@@ -119,6 +119,9 @@ theme:
 
 nav:
   - Home: '/'
+  - Getting Started:
+    - Installing CrewAI: 'getting-started/Installing-CrewAI.md'
+    - Starting a new CrewAI project: 'getting-started/Start-a-New-CrewAI-Project-Template-Method.md'
   - Core Concepts:
     - Agents: 'core-concepts/Agents.md'
     - Tasks: 'core-concepts/Tasks.md'
@@ -133,9 +136,6 @@ nav:
     - Using LangChain Tools: 'core-concepts/Using-LangChain-Tools.md'
     - Using LlamaIndex Tools: 'core-concepts/Using-LlamaIndex-Tools.md'
   - How to Guides:
-    - Starting Your crewAI Project: 'how-to/Start-a-New-CrewAI-Project.md'
-    - Installing CrewAI: 'how-to/Installing-CrewAI.md'
-    - Getting Started: 'how-to/Creating-a-Crew-and-kick-it-off.md'
     - Create Custom Tools: 'how-to/Create-Custom-Tools.md'
     - Using Sequential Process: 'how-to/Sequential.md'
     - Using Hierarchical Process: 'how-to/Hierarchical.md'
@@ -162,6 +162,7 @@ nav:
     - File Read: 'tools/FileReadTool.md'
     - Selenium Scraper: 'tools/SeleniumScrapingTool.md'
     - Directory RAG Search: 'tools/DirectorySearchTool.md'
+    - DALL-E Tool: 'tools/DALL-ETool.md'
     - PDF RAG Search: 'tools/PDFSearchTool.md'
     - TXT RAG Search: 'tools/TXTSearchTool.md'
     - CSV RAG Search: 'tools/CSVSearchTool.md'
@@ -169,7 +170,10 @@ nav:
     - JSON RAG Search: 'tools/JSONSearchTool.md'
     - Docx Rag Search: 'tools/DOCXSearchTool.md'
     - MDX RAG Search: 'tools/MDXSearchTool.md'
+    - MySQL Tool: 'tools/MySQLTool.md'
+    - NL2SQL Tool: 'tools/NL2SQLTool.md'
     - PG RAG Search: 'tools/PGSearchTool.md'
+    - Vision Tool: 'tools/VisionTool.md'
     - Website RAG Search: 'tools/WebsiteSearchTool.md'
     - Github RAG Search: 'tools/GitHubSearchTool.md'
     - Code Docs RAG Search: 'tools/CodeDocsSearchTool.md'

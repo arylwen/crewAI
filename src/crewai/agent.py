@@ -19,17 +19,27 @@ from crewai.utilities.constants import TRAINED_AGENTS_DATA_FILE, TRAINING_DATA_F
 from crewai.utilities.token_counter_callback import TokenCalcHandler
 from crewai.utilities.training_handler import CrewTrainingHandler
 
-agentops = None
-try:
-    import agentops  # type: ignore # Name "agentops" already defined on line 21
-    from agentops import track_agent
-except ImportError:
 
-    def track_agent():
+def mock_agent_ops_provider():
+    def track_agent(*args, **kwargs):
         def noop(f):
             return f
 
         return noop
+
+    return track_agent
+
+
+agentops = None
+
+if os.environ.get("AGENTOPS_API_KEY"):
+    try:
+        import agentops  # type: ignore # Name "agentops" already defined on line 21
+        from agentops import track_agent
+    except ImportError:
+        track_agent = mock_agent_ops_provider()
+else:
+    track_agent = mock_agent_ops_provider()
 
 
 @track_agent()
@@ -55,6 +65,9 @@ class Agent(BaseAgent):
             tools: Tools at agents disposal
             step_callback: Callback to be executed after each step of the agent execution.
             callbacks: A list of callback functions from the langchain library that are triggered during the agent's execution process
+    """
+
+    _times_executed: int = PrivateAttr(default=0)
     max_execution_time: Optional[int] = Field(
         default=None,
         description="Maximum execution time for an agent to execute a task",
@@ -185,6 +198,20 @@ class Agent(BaseAgent):
             task_prompt = self._training_handler(task_prompt=task_prompt)
         else:
             task_prompt = self._use_trained_data(task_prompt=task_prompt)
+
+        try:
+            result = self.agent_executor.invoke(
+                {
+                    "input": task_prompt,
+                    "tool_names": self.agent_executor.tools_names,
+                    "tools": self.agent_executor.tools_description,
+                }
+            )["output"]
+        except Exception as e:
+            self._times_executed += 1
+            if self._times_executed > self.max_retry_limit:
+                raise e
+            result = self.execute_task(task, context, tools)
 
         if self.max_rpm:
             self._rpm_controller.stop_rpm_counter()
